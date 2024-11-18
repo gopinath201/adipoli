@@ -121,6 +121,7 @@ if __name__ == '__main__':
 
 
 add_donation.html
+........................................................................
 <!DOCTYPE html>
 <html>
 <head>
@@ -144,6 +145,7 @@ add_donation.html
 
 
 view_inventory.html
+...........................................................
 <!DOCTYPE html>
 <html>
 <head>
@@ -180,6 +182,7 @@ view_inventory.html
 
 
 edit_donation.html
+...................................................................
 <!DOCTYPE html>
 <html>
 <head>
@@ -204,6 +207,7 @@ edit_donation.html
 
 
 delete_donation.html
+...........................................................
 <!DOCTYPE html>
 <html>
 <head>
