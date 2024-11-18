@@ -1,0 +1,111 @@
+from abc import ABC, abstractmethod
+import matplotlib.pyplot as plt
+
+
+class Biodata(ABC):
+    def __init__(self, name, data):
+        self.name = name
+        self.data = data
+
+
+    @abstractmethod
+    def analyze(self):
+        pass
+
+
+    @abstractmethod
+    def visualize(self):
+        pass
+
+
+
+
+class ProteinSequence(Biodata):
+    def __init__(self, name, sequence):
+        super().__init__(name, sequence)
+
+
+    def analyze(self):
+        print(set(self.data))
+        return {"length": len(self.data), "unique_aminoacids": len(set(self.data))}
+
+
+    def visualize(self):
+        amino_acid_count = {aa: self.data.count(aa) for aa in set(self.data)}
+        plt.bar(amino_acid_count.keys(), amino_acid_count.values())
+        plt.xlabel('Amino Acids')
+        plt.ylabel('Counts')
+        plt.title(f'Amino Acid Frequency in {self.name}')
+        plt.show()
+
+
+
+
+class GeneExpression(Biodata):
+    def __init__(self, name, expression_levels):
+        super().__init__(name, expression_levels)
+
+
+    def analyze(self):
+        return {"mean_expression": sum(self.data) / len(self.data)}
+
+
+    def visualize(self):
+        plt.plot(self.data)
+        plt.title(f"Gene Expression Levels for {self.name}")
+        plt.xlabel('Samples')
+        plt.ylabel('Expression Level')
+        plt.show()
+
+
+
+
+class DNASequence(Biodata):
+    def __init__(self, name, sequence):
+        super().__init__(name, sequence)
+
+
+    def analyze(self):
+        gc_count = sum(1 for i in self.data if i in {'G', 'C', 'g', 'c'})
+        gc_content = gc_count / len(self.data) * 100
+        return {"GC_content_percentage": gc_content}
+
+
+    def visualize(self):
+        print(f"Visualizing DNA sequence for {self.name}: {self.data}")
+
+
+
+
+def menu():
+    print("Choose an option:")
+    print("1) Protein sequence")
+    print("2) DNA sequence")
+    choice = input("Choose 1 or 2: ")
+
+
+    if choice == '1':
+        name = input("Enter the name of the protein: ")
+        sequence = input("Enter the protein sequence: ")
+        protein = ProteinSequence(name, sequence)
+        protein.analyze()
+        #print(protein_analysis)
+        protein.visualize()
+
+
+    elif choice == '2':
+        name = input("Enter the name of the DNA sequence: ")
+        sequence = input("Enter the DNA sequence: ")
+        dna = DNASequence(name, sequence)
+        dna_analysis = dna.analyze()
+        print(dna_analysis)
+        dna.visualize()
+
+
+    else:
+        print("Exiting the program.")
+
+
+
+
+menu()
