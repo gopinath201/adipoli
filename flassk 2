@@ -263,6 +263,10 @@ search_inventory.html
             <td>{{ record.quantity_ml }}</td>
             <td>{{ record.donation_date }}</td>
         </tr>
-        {% endfor
-
-
+        {% endfor %}
+    </table>
+    {% else %}
+    <h2>No results found for the specified blood group.</h2>
+    {% endif %}
+</body>
+</html>
