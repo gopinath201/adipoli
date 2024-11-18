@@ -1,0 +1,50 @@
+81% of storage used … If you run out, you can't create, edit, and upload files. Get 30 GB of storage for ₹59.00 ₹15.00/month for 2 months.
+from flask import Flask, render_template, request
+import numpy as np
+import joblib
+
+app = Flask(__name__)
+
+# Load the model directly from the joblib file
+model = joblib.load("lung_cancer_model.joblib")
+
+@app.route('/')
+def home():
+    return render_template('title.html')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if request.method == 'POST':
+        # Get data from the form
+        gender = 1 if request.form['gender'] == 'M' else 0
+        age = int(request.form['age'])
+        smoking = int(request.form['smoking'])
+        yellow_fingers = int(request.form['yellow_fingers'])
+        anxiety = int(request.form['anxiety'])
+        peer_pressure = int(request.form['peer_pressure'])
+        chronic_disease = int(request.form['chronic_disease'])
+        fatigue = int(request.form['fatigue'])
+        allergy = int(request.form['allergy'])
+        wheezing = int(request.form['wheezing'])
+        alcohol = int(request.form['alcohol'])
+        coughing = int(request.form['coughing'])
+        shortness_of_breath = int(request.form['shortness_of_breath'])
+        swallowing_difficulty = int(request.form['swallowing_difficulty'])
+        chest_pain = int(request.form['chest_pain'])
+
+        # Prepare the feature vector for prediction
+        features = np.array([[gender, age, smoking, yellow_fingers, anxiety, peer_pressure,
+                              chronic_disease, fatigue, allergy, wheezing, alcohol, coughing,
+                              shortness_of_breath, swallowing_difficulty, chest_pain]])
+
+        # No scaling needed here since model was trained without scaling
+
+        # Predict using the model
+        prediction = model.predict(features)
+
+        output = 'Yes' if prediction[0] == 1 else 'No'
+
+        return render_template('title.html', prediction_text=f'Lung Cancer Prediction: {output}')
+
+if __name__ == "__main__":
+    app.run(debug=True)
