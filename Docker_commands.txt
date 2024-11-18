@@ -1,0 +1,25 @@
+# In VS code terminal
+
+python -m venv venv 
+. venv\Scripts\activate
+pip install flask
+pip freeze > requirements.txt
+docker login
+
+# In command prompt  
+
+docker init
+docker login
+docker pull ubuntu
+docker run -it ubuntu
+
+# In VS code terminal
+
+docker build .
+docker images
+docker build -t new:latest .
+docker images
+docker run new
+docker tag new <copy n paste the repo name>
+docker push <copy n paste the repo name>:latest   # example : docker push dedsec819/doc7:latest 
+docker pull <copy n paste the repo name>:latest
