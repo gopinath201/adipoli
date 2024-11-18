@@ -1,0 +1,263 @@
+blood_inventory.sql
+CREATE DATABASE blood_inventory;
+
+USE blood_inventory;
+
+CREATE TABLE blood_stock (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    blood_group VARCHAR(10) NOT NULL,
+    donor_name VARCHAR(255),
+    quantity_ml INT NOT NULL,
+    donation_date DATE NOT NULL
+);
+
+
+app.py
+from flask import Flask, render_template, request, redirect, url_for
+import mysql.connector
+
+app = Flask(__name__)
+
+# Database configuration
+db_config = {
+    "host": "localhost",
+    "user": "root",
+    "password": "password",  # Replace with your MySQL password
+    "database": "blood_inventory"
+}
+
+@app.route('/')
+def home():
+    return redirect('/view_inventory')
+
+@app.route('/add_donation', methods=['GET', 'POST'])
+def add_donation():
+    if request.method == 'POST':
+        blood_group = request.form['blood_group']
+        donor_name = request.form['donor_name']
+        quantity_ml = request.form['quantity_ml']
+        donation_date = request.form['donation_date']
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO blood_stock (blood_group, donor_name, quantity_ml, donation_date) VALUES (%s, %s, %s, %s)",
+            (blood_group, donor_name, quantity_ml, donation_date)
+        )
+        conn.commit()
+        conn.close()
+        return redirect('/view_inventory')
+
+    return render_template('add_donation.html')
+
+@app.route('/view_inventory')
+def view_inventory():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM blood_stock")
+    inventory = cursor.fetchall()
+    conn.close()
+    return render_template('view_inventory.html', inventory=inventory)
+
+@app.route('/edit_donation/<int:id>', methods=['GET', 'POST'])
+def edit_donation(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    
+    if request.method == 'POST':
+        blood_group = request.form['blood_group']
+        donor_name = request.form['donor_name']
+        quantity_ml = request.form['quantity_ml']
+        donation_date = request.form['donation_date']
+        
+        cursor.execute(
+            "UPDATE blood_stock SET blood_group=%s, donor_name=%s, quantity_ml=%s, donation_date=%s WHERE id=%s",
+            (blood_group, donor_name, quantity_ml, donation_date, id)
+        )
+        conn.commit()
+        conn.close()
+        return redirect('/view_inventory')
+
+    cursor.execute("SELECT * FROM blood_stock WHERE id=%s", (id,))
+    record = cursor.fetchone()
+    conn.close()
+    return render_template('edit_donation.html', record=record)
+
+@app.route('/delete_donation/<int:id>', methods=['GET', 'POST'])
+def delete_donation(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        cursor.execute("DELETE FROM blood_stock WHERE id=%s", (id,))
+        conn.commit()
+        conn.close()
+        return redirect('/view_inventory')
+    
+    cursor.execute("SELECT * FROM blood_stock WHERE id=%s", (id,))
+    record = cursor.fetchone()
+    conn.close()
+    return render_template('delete_donation.html', record=record)
+
+@app.route('/search_inventory', methods=['GET', 'POST'])
+def search_inventory():
+    results = None
+    if request.method == 'POST':
+        blood_group = request.form['blood_group']
+        
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT * FROM blood_stock WHERE blood_group=%s",
+            (blood_group,)
+        )
+        results = cursor.fetchall()
+        conn.close()
+        
+    return render_template('search_inventory.html', results=results)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+add_donation.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Blood Donation</title>
+</head>
+<body>
+    <h1>Add Blood Donation</h1>
+    <form method="post">
+        <label>Blood Group:</label>
+        <input type="text" name="blood_group" required><br>
+        <label>Donor Name:</label>
+        <input type="text" name="donor_name"><br>
+        <label>Quantity (in mL):</label>
+        <input type="number" name="quantity_ml" required><br>
+        <label>Donation Date:</label>
+        <input type="date" name="donation_date" required><br>
+        <button type="submit">Add Donation</button>
+    </form>
+</body>
+</html>
+
+
+view_inventory.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blood Inventory</title>
+</head>
+<body>
+    <h1>Blood Inventory</h1>
+    <a href="/add_donation">Add Donation</a> | <a href="/search_inventory">Search Inventory</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Blood Group</th>
+            <th>Donor Name</th>
+            <th>Quantity (mL)</th>
+            <th>Donation Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for record in inventory %}
+        <tr>
+            <td>{{ record.id }}</td>
+            <td>{{ record.blood_group }}</td>
+            <td>{{ record.donor_name or 'N/A' }}</td>
+            <td>{{ record.quantity_ml }}</td>
+            <td>{{ record.donation_date }}</td>
+            <td>
+                <a href="/edit_donation/{{ record.id }}">Edit</a> | 
+                <a href="/delete_donation/{{ record.id }}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
+
+edit_donation.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Blood Donation</title>
+</head>
+<body>
+    <h1>Edit Blood Donation</h1>
+    <form method="post">
+        <label>Blood Group:</label>
+        <input type="text" name="blood_group" value="{{ record.blood_group }}" required><br>
+        <label>Donor Name:</label>
+        <input type="text" name="donor_name" value="{{ record.donor_name }}"><br>
+        <label>Quantity (in mL):</label>
+        <input type="number" name="quantity_ml" value="{{ record.quantity_ml }}" required><br>
+        <label>Donation Date:</label>
+        <input type="date" name="donation_date" value="{{ record.donation_date }}" required><br>
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
+
+
+
+delete_donation.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Blood Donation</title>
+</head>
+<body>
+    <h1>Delete Blood Donation</h1>
+    <p>Are you sure you want to delete the following record?</p>
+    <ul>
+        <li>ID: {{ record[0] }}</li>
+        <li>Blood Group: {{ record[1] }}</li>
+        <li>Donor Name: {{ record[2] }}</li>
+        <li>Quantity: {{ record[3] }} mL</li>
+        <li>Donation Date: {{ record[4] }}</li>
+    </ul>
+    <form method="post">
+        <button type="submit">Delete</button>
+        <a href="/view_inventory">Cancel</a>
+    </form>
+</body>
+</html>
+
+
+search_inventory.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Blood Inventory</title>
+</head>
+<body>
+    <h1>Search Blood Inventory</h1>
+    <form method="post">
+        <label>Blood Group:</label>
+        <input type="text" name="blood_group" required><br>
+        <button type="submit">Search</button>
+    </form>
+    {% if results %}
+    <h2>Search Results:</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Blood Group</th>
+            <th>Donor Name</th>
+            <th>Quantity (mL)</th>
+            <th>Donation Date</th>
+        </tr>
+        {% for record in results %}
+        <tr>
+            <td>{{ record.id }}</td>
+            <td>{{ record.blood_group }}</td>
+            <td>{{ record.donor_name or 'N/A' }}</td>
+            <td>{{ record.quantity_ml }}</td>
+            <td>{{ record.donation_date }}</td>
+        </tr>
+        {% endfor
+
+
