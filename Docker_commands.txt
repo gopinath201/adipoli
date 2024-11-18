@@ -23,3 +23,12 @@ docker run new
 docker tag new <copy n paste the repo name>
 docker push <copy n paste the repo name>:latest   # example : docker push dedsec819/doc7:latest 
 docker pull <copy n paste the repo name>:latest
+
+
+
+uname -a 
+pwd
+ls
+echo
+df -h 
+exit
