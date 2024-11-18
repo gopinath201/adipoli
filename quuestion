@@ -1,0 +1,1 @@
+give me a very simple flask integrated with  mysql database for library management with html files and its file names for each each template. the sql must have book id, customer id, date of issue , customer name etc without css file. Make sure all the entries into the database are added through the flask code
