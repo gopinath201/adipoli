@@ -29,6 +29,6 @@ docker pull <copy n paste the repo name>:latest
 uname -a 
 pwd
 ls
-echo
+echo (if he doesnt work use apt install nano)
 df -h 
 exit
