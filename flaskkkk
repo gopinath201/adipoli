@@ -1,0 +1,117 @@
+blood_inventory.sql
+CREATE DATABASE blood_inventory;
+
+USE blood_inventory;
+
+CREATE TABLE blood_stock (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    blood_group VARCHAR(10) NOT NULL,
+    donor_name VARCHAR(255),
+    quantity_ml INT NOT NULL,
+    donation_date DATE NOT NULL
+);
+
+
+app.py
+
+from flask import Flask, render_template, request, redirect
+import mysql.connector
+
+app = Flask(__name__)
+
+# Database configuration
+db_config = {
+    "host": "localhost",
+    "user": "root",
+    "password": "password",  # Replace with your MySQL password
+    "database": "blood_inventory"
+}
+
+@app.route('/')
+def home():
+    return redirect('/view_inventory')
+
+@app.route('/add_donation', methods=['GET', 'POST'])
+def add_donation():
+    if request.method == 'POST':
+        blood_group = request.form['blood_group']
+        donor_name = request.form['donor_name']
+        quantity_ml = request.form['quantity_ml']
+        donation_date = request.form['donation_date']
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO blood_stock (blood_group, donor_name, quantity_ml, donation_date) VALUES (%s, %s, %s, %s)",
+            (blood_group, donor_name, quantity_ml, donation_date)
+        )
+        conn.commit()
+        conn.close()
+        return redirect('/view_inventory')
+
+    return render_template('add_donation.html')
+
+@app.route('/view_inventory')
+def view_inventory():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM blood_stock")
+    inventory = cursor.fetchall()
+    conn.close()
+    return render_template('view_inventory.html', inventory=inventory)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+add_donation.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Blood Donation</title>
+</head>
+<body>
+    <h1>Add Blood Donation</h1>
+    <form method="post">
+        <label>Blood Group:</label>
+        <input type="text" name="blood_group" required><br>
+        <label>Donor Name:</label>
+        <input type="text" name="donor_name"><br>
+        <label>Quantity (in mL):</label>
+        <input type="number" name="quantity_ml" required><br>
+        <label>Donation Date:</label>
+        <input type="date" name="donation_date" required><br>
+        <button type="submit">Add Donation</button>
+    </form>
+</body>
+</html>
+
+
+view_inventory.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blood Inventory</title>
+</head>
+<body>
+    <h1>Blood Inventory</h1>
+    <a href="/add_donation">Add Donation</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Blood Group</th>
+            <th>Donor Name</th>
+            <th>Quantity (mL)</th>
+            <th>Donation Date</th>
+        </tr>
+        {% for record in inventory %}
+        <tr>
+            <td>{{ record.id }}</td>
+            <td>{{ record.blood_group }}</td>
+            <td>{{ record.donor_name or 'N/A' }}</td>
+            <td>{{ record.quantity_ml }}</td>
+            <td>{{ record.donation_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
